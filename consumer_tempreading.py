@@ -20,7 +20,7 @@ async def main(host, username, password, account_id):
                               password=password,
                               account_id=account_id)
         
-        consumer = await memphis.consumer(station_name="zakar-tweets", consumer_name="printing-consumer")
+        consumer = await memphis.consumer(station_name="zakar-temperature-readings", consumer_name="printing-consumer")
 
         while True:
             batch = await consumer.fetch()
@@ -33,7 +33,7 @@ async def main(host, username, password, account_id):
                         "type": "Feature",
                         "properties": {
                             'day':record['day'],
-                            'tweet':record['tweet']
+                            'temperature':record['temperature']
                         },
                         "geometry": {
                             "coordinates": [
@@ -49,7 +49,7 @@ async def main(host, username, password, account_id):
 
         # Step 3b: Save the dictionary as JSON file
         # Replace 'data.json' with the desired file path
-                with open('data.geojson', 'w') as json_file:
+                with open('temperaturereadings.geojson', 'w') as json_file:
                     json.dump(mygeoj, json_file)
     except (MemphisError, MemphisConnectError) as e:
         print(e)
