@@ -6,12 +6,52 @@ import argparse
 import asyncio
 import json
 import os
+import psycopg2
 
 from memphis import Memphis, MemphisError, MemphisConnectError, MemphisHeaderError
-mygeoj = {
-  "type": "FeatureCollection",
-  "features": []
-}
+supabase_url = "db.kvulzxaujxmffjfnhstj.supabase.co"
+supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2dWx6eGF1anhtZmZqZm5oc3RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTA2MzM2MTAsImV4cCI6MjAwNjIwOTYxMH0.9TwkwD5t8Rw5uuMR71lnBBtucJ_ggknfn6BP-IJiiOw"
+
+db_pwd = 'saveZakar@123'
+def insert_temperature_reading(day,temperature,  latitude, longitude):
+    try:
+        # Connect to the Supabase database
+        connection = psycopg2.connect(
+            dbname="postgres",
+            user="postgres",
+            password=db_pwd,
+            host=supabase_url,
+            port="5432",  # Default PostgreSQL port
+            options=f"-c search_path=public",
+        )
+
+        # Create a cursor to execute queries
+        cursor = connection.cursor()
+
+        # Prepare the data
+        data = {
+            "temperature": temperature,
+            "day": day,
+            "latitude": latitude,
+            "longitude": longitude,
+        }
+
+        # Create the SQL query with PostGIS function ST_MakePoint
+        insert_query = "INSERT INTO firereading (day, temperature , geometry) VALUES (%(day)s, %(temperature)s, ST_MakePoint(%(longitude)s, %(latitude)s));"
+
+        # Execute the query
+        cursor.execute(insert_query, data)
+
+        # Commit the transaction
+        connection.commit()
+
+        # Close the cursor and connection
+        cursor.close()
+        connection.close()
+
+        print(f"Data inserted successfully. for {day} and temp {temperature}")
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
 async def main(host, username, password, account_id):
     try:
         memphis = Memphis()
@@ -29,28 +69,8 @@ async def main(host, username, password, account_id):
                     serialized_record = msg.get_data()
                     record = json.loads(serialized_record)
                     print(type(record))
-                    feat = {
-                        "type": "Feature",
-                        "properties": {
-                            'day':record['day'],
-                            'temperature':record['temperature']
-                        },
-                        "geometry": {
-                            "coordinates": [
-                           record['geospatial_x'],
-                            record['geospatial_y']
-                            ],
-                            "type": "Point"
-                        }
-                        }
-                    mygeoj['features'].append(feat)
-                    
-                json.dumps(mygeoj)
-
-        # Step 3b: Save the dictionary as JSON file
-        # Replace 'data.json' with the desired file path
-                with open('temperaturereadings.geojson', 'w') as json_file:
-                    json.dump(mygeoj, json_file)
+                    insert_temperature_reading(record['day'],record['temperature'],  record['geospatial_y'], record['geospatial_x'])
+             
     except (MemphisError, MemphisConnectError) as e:
         print(e)
 
