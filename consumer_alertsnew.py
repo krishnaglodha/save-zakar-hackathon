@@ -2,7 +2,6 @@
 This example consumers messages from Memphis and prints them to the console.
 """
 
-
 import argparse
 import asyncio
 import json
@@ -54,33 +53,57 @@ def insert_temperature_reading(event_day,notification_day,  latitude, longitude)
     except Exception as e:
         print(f"Error occurred: {str(e)}")
 
-async def main():
+async def main(host, username, password, account_id):
     try:
         memphis = Memphis()
-        print('trying')
-        await memphis.connect(host='aws-eu-central-1.cloud.memphis.dev',
-                              username='krishna',
-                              password='Blackmabma@1',
-                              account_id=223672030)
+        await memphis.connect(host=host,
+                              username=username,
+                              password=password,
+                              account_id=account_id)
         
         consumer = await memphis.consumer(station_name="zakar-fire-alerts", consumer_name="printing-consumer")
-        
+
         while True:
             batch = await consumer.fetch()
-            print(batch)
             if batch is not None:
                 for msg in batch:
                     serialized_record = msg.get_data()
                     record = json.loads(serialized_record)
                     print(type(record))
                     insert_temperature_reading(record['event_day'],record['notification_day'],  record['geospatial_y'], record['geospatial_x'])
+             
     except (MemphisError, MemphisConnectError) as e:
         print(e)
 
     finally:
         await memphis.close()
 
+def parse_args():
+    parser = argparse.ArgumentParser()
 
-asyncio.run(main())
+    parser.add_argument("--host",
+                        type=str,
+                        required=True,
+                        help="Memphis broker host")
 
+    parser.add_argument("--username",
+                        type=str,
+                        required=True,
+                        help="Memphis username")
 
+    parser.add_argument("--password",
+                        type=str,
+                        required=True,
+                        help="Memphis password")
+
+    parser.add_argument("--account-id",
+                        type=int,
+                        required=True,
+                        help="Memphis account ID")
+
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    args = parse_args()
+
+    asyncio.run(main(args.host, args.username, args.password, args.account_id))
