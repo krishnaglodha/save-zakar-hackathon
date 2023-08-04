@@ -54,7 +54,7 @@ def insert_temperature_reading(event_day,notification_day,  latitude, longitude)
     except Exception as e:
         print(f"Error occurred: {str(e)}")
 
-async def main(host, username, password, account_id):
+async def main():
     try:
         memphis = Memphis()
         await memphis.connect(host='aws-eu-central-1.cloud.memphis.dev',
@@ -80,8 +80,6 @@ async def main(host, username, password, account_id):
 
 
 if __name__ == "__main__":
-    main()
-
-    # asyncio.run(main(args.host, args.username, args.password, args.account_id))
+    asyncio.run(main())
 
 
