@@ -37,7 +37,7 @@ def insert_temperature_reading(event_day,notification_day,  latitude, longitude)
         }
 
         # Create the SQL query with PostGIS function ST_MakePoint
-        insert_query = "INSERT INTO firealerts (event_day, notification_day , geometry) VALUES (%(event_day)s, %(notification_day)s, ST_MakePoint(%(longitude)s, %(latitude)s));"
+        insert_query = "INSERT INTO tweets (event_day, notification_day , geometry) VALUES (%(event_day)s, %(notification_day)s, ST_MakePoint(%(longitude)s, %(latitude)s));"
 
         # Execute the query
         cursor.execute(insert_query, data)
