@@ -65,6 +65,7 @@ async def main(host, username, password, account_id):
 
         while True:
             batch = await consumer.fetch()
+            print(batch)
             if batch is not None:
                 for msg in batch:
                     serialized_record = msg.get_data()
